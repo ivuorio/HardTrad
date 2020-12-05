@@ -13,7 +13,9 @@ import {
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { AppearanceProvider, useColorScheme } from 'react-native-appearance';
+
 const Stack = createStackNavigator();
 
 const screenWidth = Dimensions.get('window').width;
@@ -120,13 +122,13 @@ export default function App(){
     function frontPageView({navigation}){
 	return(
 	    <View style={styles.container}>
-		<Image source={{ uri: 'https://static.vecteezy.com/system/resources/previews/001/206/203/non_2x/mountain-logo-png.png' }} style={styles.logo} />
-		    <Text style={styles.instructions}>
-			Start by choosing a photo!
-		    </Text>
+		<Image source={{ uri: 'https://webstockreview.net/images/clipart-free-mountain-19.png' }} style={styles.logo} />
+		<Text style={styles.instructions}>
+		    Start by choosing a photo!
+		</Text>
 
 		<TouchableOpacity onPress={() => { openImagePickerAsync(navigation); navigation.navigate('Route')}} style={styles.button}>
-	
+		    
 		    <Text style={styles.buttonText}>Pick a photo</Text>
 		</TouchableOpacity>
 	    </View>
@@ -197,20 +199,21 @@ export default function App(){
 	
     }
     return(
-	<NavigationContainer>
-	    <Stack.Navigator mode="modal">
-		<Stack.Screen name="HardTrad" component={frontPageView} />
-		<Stack.Screen name="Gear List" component={gearListView} />
-		<Stack.Screen name="Route" component={imageTagsView} />
-	    </Stack.Navigator>
-	</NavigationContainer>
+	<AppearanceProvider>
+	    <NavigationContainer theme={DarkTheme}>
+		<Stack.Navigator mode="modal">
+		    <Stack.Screen name="HardTrad" component={frontPageView} />
+		    <Stack.Screen name="Gear List" component={gearListView} />
+		    <Stack.Screen name="Route" component={imageTagsView} />
+		</Stack.Navigator>
+	    </NavigationContainer>
+	</AppearanceProvider>
     );
 }
 
 const styles = StyleSheet.create({
     container: {	
 	flex: 1,
-	backgroundColor: '#fff',
 	alignItems: 'center',
 	justifyContent: 'center',
 	marginTop: Constants.statusBarHeight,
