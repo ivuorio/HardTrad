@@ -12,6 +12,9 @@ import {
 }from 'react-native';
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
+import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
+const Stack = createStackNavigator();
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -24,7 +27,7 @@ export default function App(){
     const [gearState, setGearState] = React.useState({gear:gearList})
 
     //Open phones native image chooser
-    let openImagePickerAsync = async () => {
+    let openImagePickerAsync = async ({navigation}) => {
 	let permissionResult = await ImagePicker.requestCameraRollPermissionsAsync();
 
 	if (permissionResult.granted === false) {
@@ -36,11 +39,12 @@ export default function App(){
 	console.log(pickerResult);
 
 	if (pickerResult.cancelled === true) {
+	    navigation.goBack()
 	    return;
 	}
 
 	setSelectedImage({ localUri: pickerResult.uri });
-	setListView(null);
+	//setListView(null);
     };
     //close image view mode
     let closeImageView = async () => {
@@ -112,39 +116,53 @@ export default function App(){
 	console.log(index)
 	setTagList({tags:tagsList})
     }
-    
-    if (selectedImage !== null){
-	//image is selected
-	if (listView !==null){
-	    //location has been chosen. Viewing gear list
-	    return(
-		<View style={styles.container}>
-		<Text> Choose gear</Text>
-		{
-		    <View style={{zIndex:99}}>
-		    <ScrollView>
-		    {
-			gearState.gear.map(gear=>(
-			    <TouchableOpacity style={styles.buttonSmall} key={gear.id} onPress={()=>{tagGear(gear)}}>
-				<View>
-				    <Text style={styles.smallButtonText}> {gear.name}</Text>
-				</View>
-			    </TouchableOpacity>
-			))
-		    }
-		    <TouchableOpacity style={styles.button} onPress={() => setListView(null)}>
-			<Text style={styles.buttonText}> Cancel </Text>
-		    </TouchableOpacity>
-		    </ScrollView>
-		    </View>
-		}
-		</View>
-	    )
-    }
-	//no location has been chosen. Viewing image
+
+    function frontPageView({navigation}){
 	return(
 	    <View style={styles.container}>
-		<TouchableWithoutFeedback onPress={(event) => {searchGear(event)}}>
+		<Image source={{ uri: 'https://static.vecteezy.com/system/resources/previews/001/206/203/non_2x/mountain-logo-png.png' }} style={styles.logo} />
+		    <Text style={styles.instructions}>
+			Start by choosing a photo!
+		    </Text>
+
+		<TouchableOpacity onPress={() => { openImagePickerAsync(navigation); navigation.navigate('Route')}} style={styles.button}>
+	
+		    <Text style={styles.buttonText}>Pick a photo</Text>
+		</TouchableOpacity>
+	    </View>
+	);
+    }
+
+    function gearListView({navigation}) {
+	return(
+	    <View style={styles.container}>
+	    <Text> Choose gear</Text>
+	    {
+		<View style={{zIndex:99}}>
+		<ScrollView>
+		{
+		    gearState.gear.map(gear=>(
+			<TouchableOpacity style={styles.buttonSmall} key={gear.id} onPress={() => {tagGear(gear); navigation.goBack();}}>
+			    <View>
+				<Text style={styles.smallButtonText}> {gear.name}</Text>
+			    </View>
+			</TouchableOpacity>
+		    ))
+		}
+		<TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+		    <Text style={styles.buttonText}> Cancel </Text>
+		</TouchableOpacity>
+		</ScrollView>
+		</View>
+	    }
+	    </View>
+	)
+    }
+    function imageTagsView({navigation}){
+	
+	return(
+	    <View style={styles.container}>
+		<TouchableWithoutFeedback onPress={(event) => {searchGear(event); navigation.navigate('Gear List')}}>
 		    <View>
 			<Image
 			source={{ uri:selectedImage.localUri}}
@@ -171,31 +189,26 @@ export default function App(){
 		<Text style={styles.instructions}>
 		    This is your photo
 		</Text>
-		<TouchableOpacity onPress={closeImageView} style={styles.button}>
+		<TouchableOpacity onPress={() => {closeImageView; navigation.navigate('HardTrad');}} style={styles.button}>
 		    <Text style={styles.buttonText}>Close</Text>
 		</TouchableOpacity>
 	    </View>
 	);
 	
     }
-	
-  return (
-    <View style={styles.container}>
-      <Image source={{ uri: 'https://static.vecteezy.com/system/resources/previews/001/206/203/non_2x/mountain-logo-png.png' }} style={styles.logo} />
-      <Text style={styles.instructions}>
-        Start by choosing a photo!
-      </Text>
-
-      <TouchableOpacity onPress={openImagePickerAsync} style={styles.button}>
-        <Text style={styles.buttonText}>Pick a photo</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    return(
+	<NavigationContainer>
+	    <Stack.Navigator mode="modal">
+		<Stack.Screen name="HardTrad" component={frontPageView} />
+		<Stack.Screen name="Gear List" component={gearListView} />
+		<Stack.Screen name="Route" component={imageTagsView} />
+	    </Stack.Navigator>
+	</NavigationContainer>
+    );
 }
 
 const styles = StyleSheet.create({
     container: {	
-	marginTop: 18,
 	flex: 1,
 	backgroundColor: '#fff',
 	alignItems: 'center',
@@ -211,7 +224,7 @@ const styles = StyleSheet.create({
 	color: '#888',
 	fontSize: 18,
 	marginHorizontal: 15,
-	marginBottom: 10,
+	marginBottom: 3,
     },
     button: {
 	backgroundColor: 'gray',
